@@ -14,7 +14,7 @@ mydb = pymysql.connect(
     cursorclass=pymysql.cursors.DictCursor
 )
 
-# first need to create a DB called store. Afterwards populate it with a few values. 
+
 
 mycursor = mydb.cursor()
 
@@ -48,12 +48,13 @@ def add_category():
     new_cat = request.POST.get('name')
     if new_cat:
         cat_list = get_my_categories()
-        print(len(cat_list))
-        for category in cat_list:
-             if category == new_cat:
-                STATUS = "ERROR"
-                MSG = "200 - Category already exists"
-                add_category(new_cat)
+        print(list(cat_list))
+        # for category in cat_list():
+        #     print(category)
+        #     if category['name'] == new_cat:
+        #         STATUS = "ERROR"
+        #         MSG = "200 - Category already exists"
+        insert_new_category(new_cat)
     else:
         STATUS = "ERROR"
         MSG = "Bad request! 400"
@@ -61,10 +62,10 @@ def add_category():
     return json.dumps(result)
 
 
-def add_category(categ):
+def insert_new_category(category):
     try:
         with mydb.cursor() as cursor:
-            sql = "INSERT INTO categories(name) VALUES ('{categ}')"
+            sql = "INSERT INTO categories(name)"
             cursor.execute(sql)
             mydb.commit()
             STATUS = "SUCCESS"
@@ -77,23 +78,18 @@ def add_category(categ):
 
 @get('/categories')
 def get_my_categories():
-    myList = []
     try:
         with mydb.cursor() as cursor:
             sql = "SELECT name FROM categories"
             cursor.execute(sql)
-            mycategories = cursor.fetchall()
-            for dic in mycategories:
-                for key in dic:
-                    print(dic[key] != "")
-                    if dic[key] != "":
-                        myList.append(dic[key])
-    except Exception as e:    
+            CATEGORIES = cursor.fetchall()
+            STATUS = "SUCCESS"
+            MSG = "Item was added!"
+    except Exception as e:
+        STATUS = "ERROR"
         MSG = "500 - Internal Error"
-    
-    # result = {mycategories}
-    # return json.dumps(result)
-    return myList
+    result = {"STATUS":STATUS, "CATEGORIES":CATEGORIES,"MSG":MSG}
+    return json.dumps(result)
 
 @get('/js/<filename:re:.*\.js>')
 def javascripts(filename):
