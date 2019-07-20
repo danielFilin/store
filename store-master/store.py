@@ -3,6 +3,7 @@ from bottle import route, run, template, static_file, get, post, delete, request
 from sys import argv
 import json
 import pymysql
+import ast
 
 
 
@@ -45,16 +46,25 @@ def index():
 
 @post('/category')
 def add_category():
+    counter = 0
     new_cat = request.POST.get('name')
     if new_cat:
+        counter = 0
         cat_list = get_my_categories()
-        print(list(cat_list))
-        # for category in cat_list():
-        #     print(category)
-        #     if category['name'] == new_cat:
-        #         STATUS = "ERROR"
-        #         MSG = "200 - Category already exists"
-        insert_new_category(new_cat)
+        new_category = list(cat_list)
+        my_cat = "".join(new_category)
+        json_acceptable_string = my_cat.replace("'", "\"")
+        d = json.loads(json_acceptable_string)
+        myobj = d['CATEGORIES']
+        for category in myobj:
+            print(category['name'], new_cat)
+            if new_cat == category['name']:            
+                STATUS = "ERROR"
+                MSG = "200 - Category already exists"
+                counter = 1
+        print(counter)
+        if counter == 0:
+            insert_new_category(new_cat)
     else:
         STATUS = "ERROR"
         MSG = "Bad request! 400"
