@@ -72,7 +72,7 @@ def add_category():
     else:
         STATUS = "ERROR"
         MSG = "Bad request! 400"
-    result = {"STATUS":"Error", "MSG":"fsa", 'id':4}
+    result = {"STATUS":"Error", "MSG":"fsa"}
     return json.dumps(result)
 
 
