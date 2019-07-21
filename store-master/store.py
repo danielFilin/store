@@ -6,11 +6,10 @@ import pymysql
 import ast
 
 
-
 mydb = pymysql.connect(
     host="localhost",
     user="root",
-    password="filin",
+    password="l33tsup4h4x0r",
     database="store",
     cursorclass=pymysql.cursors.DictCursor
 )
@@ -19,15 +18,11 @@ mycursor = mydb.cursor()
 
 #create a store DB.
 # mycursor.execute("CREATE TABLE categories (name VARCHAR(255),  my_id int(10) AUTO_INCREMENT)")
-
 # setsql = "INSERT INTO categories (name, my_id) VALUES (%s, %s)"
-
 # categoreies = [("Food", 1),
 #                 ("machinery", 2),
 #                 ("toys", 3)]
-
 # mycursor.executemany(setsql, categories)
-
 # mydb.commit()
 
 
@@ -87,8 +82,42 @@ def insert_new_category(category):
         STATUS = "error!"
         MSG = "Did not went well"
     result = {"STATUS":"good", "MSG":"good"}
-
     return result
+
+
+@delete('/category/<id>')
+def delete(id):
+    try:
+        with mydb.cursor() as cursor:
+            sql = "DELETE FROM CATEGORIES WHERE ID='{}'".format(id)
+            cursor.execute(sql)
+            categories = cursor.fetchall()
+            status = 'SUCCESS – The category was deleted successfully'
+            msg = ''
+            code = '201 - category deleted successfully'
+    except Exception as e:
+        status = 'ERROR – The category was not deleted due to an error'
+        if response.status_code >= 400 and < 500:
+            code = response.status_code
+            msg = 'Category Not Found'
+        elif response.status_code >= 500 and < 600:
+            code = response.status_code
+            msg = 'Category Not Found'
+        elif response.status_code >= 200 and < 300:
+            code = response.status_code
+            msg = 'Category Not Found'
+        else:
+            code = response.status_code
+            msg = str(e)
+
+    return json.dumps({"STATUS": status, "CODE": code, "MSG": msg})
+
+
+
+
+
+
+
 
 @get('/categories')
 def get_my_categories():
@@ -120,4 +149,10 @@ def images(filename):
     return static_file(filename, root='images')
 
 
-run(host='localhost', port=5000)
+def main():
+    run(host='localhost', port=5000, debug=True)
+
+
+if __name__ == '__main__':
+    main()
+
