@@ -3,6 +3,8 @@ from bottle import route, run, template, static_file, get, post, delete, request
 from sys import argv
 import json
 import pymysql
+import ast
+
 
 mydb = pymysql.connect(
     host="localhost",
@@ -13,6 +15,7 @@ mydb = pymysql.connect(
 )
 
 mycursor = mydb.cursor()
+
 
 # mycursor.execute("CREATE TABLE categories (name VARCHAR(255),  my_id int(10) AUTO_INCREMENT)")
 # setsql = "INSERT INTO categories (name, my_id) VALUES (%s, %s)"
@@ -33,32 +36,54 @@ def index():
     return template("index.html")
 
 
+@get("/test")
+def test():
+    return json.dumps({"name" : "yoav"})
+
+
+@post("/test")
+def post_test():
+    return json.dumps({"name" : request.forms.get("name")})
+
+
 @post('/category')
 def add_category():
     new_cat = request.POST.get('name')
     if new_cat:
         cat_list = get_my_categories()
-        print(list(cat_list))
-        # for category in cat_list():
-        #     print(category)
-        #     if category['name'] == new_cat:
-        #         STATUS = "ERROR"
-        #         MSG = "200 - Category already exists"
-        insert_new_category(new_cat)
+        new_category = list(cat_list)
+        my_cat = "".join(new_category)
+        json_acceptable_string = my_cat.replace("'", "\"")
+        d = json.loads(json_acceptable_string)
+        myobj = d['CATEGORIES']
+        counter = 0
+        for category in myobj:
+            #print(new_cat in category['name'])
+            if new_cat in category['name']:
+                STATUS = "ERROR"
+                MSG = "200 - Category already exists"
+                counter = -1
+                #print(new_cat, category['name'])
+        if counter == 0:
+            print(counter)
+            insert_new_category(new_cat)
+        else:
+            return None
     else:
         STATUS = "ERROR"
         MSG = "Bad request! 400"
-    result = {"STATUS":"gdd", "MSG":"fsa"}
+    result = {"STATUS":"Error", "MSG":"fsa", 'id':4}
     return json.dumps(result)
 
 
 def insert_new_category(category):
+    print(category)
     try:
         with mydb.cursor() as cursor:
-            sql = "INSERT INTO categories(name)"
+            sql = "INSERT INTO categories (name, id) VALUES('{}',null)".format(category)
             cursor.execute(sql)
-            mydb.commit()
             STATUS = "SUCCESS"
+            mydb.commit()
             MSG = "All went well"
     except Exception as e:
         STATUS = "error!"
@@ -81,6 +106,22 @@ def get_my_categories():
         MSG = "500 - Internal Error"
     result = {"STATUS":STATUS, "CATEGORIES":CATEGORIES,"MSG":MSG}
     return json.dumps(result)
+
+
+@delete("/category/<id>")
+def remove_category(id):
+    print('entering delete')
+    try:
+        with mydb.cursor() as cursor:
+            sql = "DELETE FROM CATEGORIES WHERE id={}".format(id)
+            cursor.execute(sql)
+            status = "The category was deleted successfully"
+            mydb.commit()
+            msg = ""
+    except Exception as e:
+        status = "The category was not deleted due to an error"
+        msg = "500 - Internal Error"
+    return json.dumps({"STATUS": status, "MSG": msg})
 
 
 @get('/js/<filename:re:.*\.js>')

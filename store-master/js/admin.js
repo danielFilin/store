@@ -158,7 +158,6 @@ StoreAdmin.bineForms = function(){
 
 	var addProductForm = $("form#add-product");
 	addProductForm.submit(function(e){
-		console.log(e)
 		e.preventDefault();
 		var submittedForm = $(this);
 		$.post("/product",submittedForm.serialize(),function(result){
