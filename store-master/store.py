@@ -9,7 +9,7 @@ import ast
 mydb = pymysql.connect(
     host="localhost",
     user="root",
-    password="l33tsup4h4x0r",
+    password="filin",
     database="store",
     cursorclass=pymysql.cursors.DictCursor
 )
