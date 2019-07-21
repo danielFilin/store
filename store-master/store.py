@@ -4,38 +4,28 @@ from sys import argv
 import json
 import pymysql
 
-
-
 mydb = pymysql.connect(
     host="localhost",
     user="root",
-    password="filin",
+    password="l33tsup4h4x0r",
     database="store",
     cursorclass=pymysql.cursors.DictCursor
 )
 
-
-
 mycursor = mydb.cursor()
 
-#create a store DB.
 # mycursor.execute("CREATE TABLE categories (name VARCHAR(255),  my_id int(10) AUTO_INCREMENT)")
-
 # setsql = "INSERT INTO categories (name, my_id) VALUES (%s, %s)"
-
-# categoreies = [("Food", 1),
+# categories = [("Food", 1),
 #                 ("machinery", 2),
 #                 ("toys", 3)]
-
-# mycursor.executemany(setsql, categoreies)
-
+# mycursor.executemany(setsql, categories)
 # mydb.commit()
+
 
 @get("/admin")
 def admin_portal():
-
 	return template("pages/admin.html")
-
 
 
 @get("/")
@@ -76,6 +66,7 @@ def insert_new_category(category):
     result = {"STATUS":"good", "MSG":"good"}
     return result
 
+
 @get('/categories')
 def get_my_categories():
     try:
@@ -90,6 +81,7 @@ def get_my_categories():
         MSG = "500 - Internal Error"
     result = {"STATUS":STATUS, "CATEGORIES":CATEGORIES,"MSG":MSG}
     return json.dumps(result)
+
 
 @get('/js/<filename:re:.*\.js>')
 def javascripts(filename):
