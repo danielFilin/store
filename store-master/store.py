@@ -15,8 +15,6 @@ mydb = pymysql.connect(
     cursorclass=pymysql.cursors.DictCursor
 )
 
-
-
 mycursor = mydb.cursor()
 
 #create a store DB.
@@ -28,9 +26,11 @@ mycursor = mydb.cursor()
 #                 ("machinery", 2),
 #                 ("toys", 3)]
 
-# mycursor.executemany(setsql, categoreies)
+# mycursor.executemany(setsql, categories)
 
 # mydb.commit()
+
+
 
 @get("/admin")
 def admin_portal():
@@ -46,44 +46,48 @@ def index():
 
 @post('/category')
 def add_category():
-    counter = 0
     new_cat = request.POST.get('name')
     if new_cat:
-        counter = 0
         cat_list = get_my_categories()
         new_category = list(cat_list)
         my_cat = "".join(new_category)
         json_acceptable_string = my_cat.replace("'", "\"")
         d = json.loads(json_acceptable_string)
         myobj = d['CATEGORIES']
+        counter = 0
         for category in myobj:
-            print(category['name'], new_cat)
-            if new_cat == category['name']:            
+            #print(new_cat in category['name'])
+            if new_cat in category['name']:            
                 STATUS = "ERROR"
-                MSG = "200 - Category already exists"
-                counter = 1
-        print(counter)
+                MSG = "200 - Category already exists"  
+                counter = -1 
+                #print(new_cat, category['name'])
         if counter == 0:
+            print(counter)
             insert_new_category(new_cat)
+        else: 
+            return None
     else:
         STATUS = "ERROR"
         MSG = "Bad request! 400"
-    result = {"STATUS":"gdd", "MSG":"fsa"}
+    result = {"STATUS":"Error", "MSG":"fsa"}
     return json.dumps(result)
 
 
 def insert_new_category(category):
+    print(category)
     try:
-        with mydb.cursor() as cursor:
-            sql = "INSERT INTO categories(name)"
+        with mydb.cursor() as cursor:  
+            sql = "INSERT INTO categories (name, my_id) VALUES('{}',null)".format(category)
             cursor.execute(sql)
-            mydb.commit()
             STATUS = "SUCCESS"
+            mydb.commit()
             MSG = "All went well"
     except Exception as e:
         STATUS = "error!"
         MSG = "Did not went well"
     result = {"STATUS":"good", "MSG":"good"}
+
     return result
 
 @get('/categories')
