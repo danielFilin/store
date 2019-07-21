@@ -1,12 +1,21 @@
-
-from bottle import route, run, template, static_file, get, post, delete, request
+from bottle import route, run, template, static_file, get, post, delete, request, response
 from sys import argv
 import json
 import pymysql
 import ast
 
+# Creating the database:
+def create_db:
+    cursor.execute("CREATE TABLE categories (name VARCHAR(255),  my_id int(10) AUTO_INCREMENT)")
+    setsql = "INSERT INTO categories (name, my_id) VALUES (%s, %s)"
+    categories = [("Food", 1),
+                    ("machinery", 2),
+                    ("toys", 3)]
+    cursor.executemany(setsql, categories)
+    db_store_products.commit()
 
-mydb = pymysql.connect(
+#Connecting to the database
+db_store_products = pymysql.connect(
     host="localhost",
     user="root",
     password="l33tsup4h4x0r",
@@ -14,29 +23,34 @@ mydb = pymysql.connect(
     cursorclass=pymysql.cursors.DictCursor
 )
 
-mycursor = mydb.cursor()
+cursor = db_store_products.cursor()
 
-#create a store DB.
-# mycursor.execute("CREATE TABLE categories (name VARCHAR(255),  my_id int(10) AUTO_INCREMENT)")
-# setsql = "INSERT INTO categories (name, my_id) VALUES (%s, %s)"
-# categoreies = [("Food", 1),
-#                 ("machinery", 2),
-#                 ("toys", 3)]
-# mycursor.executemany(setsql, categories)
-# mydb.commit()
+# Fetching JS, CSS, HTML Files:
+@get('/js/<filename:re:.*\.js>')
+def javascripts(filename):
+    return static_file(filename, root='js')
 
+
+@get('/css/<filename:re:.*\.css>')
+def stylesheets(filename):
+    return static_file(filename, root='css')
+
+
+@get('/images/<filename:re:.*\.(jpg|png|gif|ico)>')
+def images(filename):
+    return static_file(filename, root='images')
 
 
 @get("/admin")
 def admin_portal():
-
-	return template("pages/admin.html")
-
+    return template("pages/admin.html")
 
 
 @get("/")
 def index():
     return template("index.html")
+
+
 
 
 @post('/category')
@@ -72,11 +86,11 @@ def add_category():
 def insert_new_category(category):
     print(category)
     try:
-        with mydb.cursor() as cursor:  
+        with db_store_products.cursor() as cursor:
             sql = "INSERT INTO categories (name, my_id) VALUES('{}',null)".format(category)
             cursor.execute(sql)
             STATUS = "SUCCESS"
-            mydb.commit()
+            db_store_products.commit()
             MSG = "All went well"
     except Exception as e:
         STATUS = "error!"
@@ -87,31 +101,53 @@ def insert_new_category(category):
 
 @delete('/category/<id>')
 def delete(id):
+    # try:
+    #     with db_store_products.cursor() as cursor:
+    #         check = "SELECT ID FROM CATEGORIES WHERE ID='{}'".format(id)
+    #         cursor.execute(check)
+    #         db_store_products.commit()
+    #     if check
+
+    def fetchCategories():
+        try:
+            with connection.cursor() as cursor:
+                sql = "SELECT * FROM categories"
+                cursor.execute(sql)
+                CATEGORIES = cursor.fetchall()
+                STATUS = "SUCCESS"
+                MSG = ""
+        except Exception as e:
+            STATUS = "ERROR"
+            MSG = "500 - Internal Error"
+        result = {"STATUS": STATUS, "CATEGORIES": CATEGORIES, "MSG": MSG}
+        return json.dumps(result)
+
+
     try:
-        with mydb.cursor() as cursor:
+        with db_store_products.cursor() as cursor:
+            myquery= 'SELECT * FROM CATEGORIES WHERE ID=9' => 0 R0WS
+
+
             sql = "DELETE FROM CATEGORIES WHERE ID='{}'".format(id)
             cursor.execute(sql)
-            categories = cursor.fetchall()
+            db_store_products.commit()
             status = 'SUCCESS – The category was deleted successfully'
-            msg = ''
-            code = '201 - category deleted successfully'
+            msg = 'Category deleted successfully'
+            code = 'AAA'
+
     except Exception as e:
         status = 'ERROR – The category was not deleted due to an error'
-        if response.status_code >= 400 and < 500:
-            code = response.status_code
+        code = response.status
+        if 400 <= response.status < 500:
             msg = 'Category Not Found'
-        elif response.status_code >= 500 and < 600:
-            code = response.status_code
-            msg = 'Category Not Found'
-        elif response.status_code >= 200 and < 300:
-            code = response.status_code
-            msg = 'Category Not Found'
+        elif 500 <= response.status < 600:
+            msg = 'Internal Error'
+        elif 200 <= response.status < 300:
+            msg = 'Category deleted successfully'
         else:
-            code = response.status_code
+            code = response.status
             msg = str(e)
-
     return json.dumps({"STATUS": status, "CODE": code, "MSG": msg})
-
 
 
 
@@ -122,7 +158,7 @@ def delete(id):
 @get('/categories')
 def get_my_categories():
     try:
-        with mydb.cursor() as cursor:
+        with db_store_products.cursor() as cursor:
             sql = "SELECT name FROM categories"
             cursor.execute(sql)
             CATEGORIES = cursor.fetchall()
@@ -133,21 +169,6 @@ def get_my_categories():
         MSG = "500 - Internal Error"
     result = {"STATUS":STATUS, "CATEGORIES":CATEGORIES,"MSG":MSG}
     return json.dumps(result)
-
-@get('/js/<filename:re:.*\.js>')
-def javascripts(filename):
-    return static_file(filename, root='js')
-
-
-@get('/css/<filename:re:.*\.css>')
-def stylesheets(filename):
-    return static_file(filename, root='css')
-
-
-@get('/images/<filename:re:.*\.(jpg|png|gif|ico)>')
-def images(filename):
-    return static_file(filename, root='images')
-
 
 def main():
     run(host='localhost', port=5000, debug=True)
